@@ -273,21 +273,58 @@ def reproject_specframe(frame_list, wcs_out, fixed_wavelength=15500, width=2000,
     return image_stack, norm_stack > 0
 
 
-def spectro_composite(spec_im, im_rgb, wcs_in, wcs_out, levels=(5,98), power=1):
-    """ """
-    import reproject
-    mask = spec_im > 0
+def spectro_composite(spec_im, im_rgb, wcs_in, wcs_out, levels=(5, 98), power=1,
+                      sigma=1, strip_rows=512, dtype=np.float32):
+    """Low-memory spectro composite, processed in strips of rows.
 
-    source_im = visu.normalize_image(spec_im, levels=levels, power=power)
+    Equivalent to replacing the HSV value channel of the reprojected, smoothed
+    `im_rgb` with the normalized `spec_im`: with hue and saturation fixed,
+    rgb_new = rgb * v_new / max(rgb) (grey v_new where max(rgb) == 0).
 
-    shape = wcs_out.array_shape
-    image_rgb_big = np.zeros((shape[0], shape[1], 3))
+    dtype : np.float32 (values in [0,1]) or np.uint8 (values 0-255).
+    """
+    ny, nx = wcs_out.array_shape
 
-    for i in range(3):
-        im_proj = reproject.reproject_interp(
-            (im_rgb[:, :, i], wcs_in), wcs_out, wcs_out.array_shape,)
-        image_rgb_big[:, :, i], _ = ndimage.gaussian_filter(im_proj, 1)
+    # percentile levels over finite pixels, as in visu.normalize_image
+    vals = spec_im[np.isfinite(spec_im)]
+    low, high = np.percentile(vals, levels, overwrite_input=True)
+    del vals
+    delta = (high - low) or 1
 
-    return composite(image_rgb_big, source_im, mask, normalize=False)
+    rgb_in = np.ascontiguousarray(np.moveaxis(im_rgb, -1, 0))   # (3, ny_in, nx_in)
+    halo = int(4 * sigma + 0.5)  # gaussian_filter radius with default truncate=4
+    out = np.zeros((ny, nx, 3), dtype=dtype)
 
+    for y0 in range(0, ny, strip_rows):
+        y1 = min(y0 + strip_rows, ny)
+        a0, a1 = max(y0 - halo, 0), min(y1 + halo, ny)
 
+        # reproject all 3 channels at once onto this strip (+halo)
+        proj, _ = reproject.reproject_interp(
+            (rgb_in, wcs_in), wcs_out[a0:a1, :], shape_out=(3, a1 - a0, nx))
+        proj = proj.astype(np.float32)
+        if sigma:
+            for c in range(3):
+                ndimage.gaussian_filter(proj[c], sigma, output=proj[c])
+        nan = np.isnan(proj).any(axis=0)       # NaN footprint, already grown by the blur
+        proj[:, nan] = 0
+        rgb = np.moveaxis(proj[:, y0 - a0:y1 - a0], 0, -1)       # (h, nx, 3)
+        nan = nan[y0 - a0:y1 - a0]
+
+        s = spec_im[y0:y1]
+        v = np.nan_to_num((s - low) / delta, nan=0).astype(np.float32)
+        np.clip(v, 0, 1, out=v)
+        v **= power
+        v *= s > 0                                                 # mask
+
+        vmax = rgb.max(axis=-1)
+        scale = np.divide(v, vmax, out=np.zeros_like(v), where=vmax > 0)
+        strip = rgb * scale[..., None]
+        grey = (vmax <= 0) | nan                                  # grey, as rgb2hsv gives S=0
+        strip[grey] = v[grey, None]
+
+        if out.dtype == np.uint8:
+            out[y0:y1] = strip * np.float32(255.99)   # 255.999999 rounds to 256 in float32
+        else:
+            out[y0:y1] = strip
+    return out
