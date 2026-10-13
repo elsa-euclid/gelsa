@@ -40,6 +40,9 @@ class Gelsa:
         'zero_order_catalog': None,
         'nir_wcs': 'nir_wcs.json',
         'use_persistence_mask': False,
+        'use_noisechisel_background': False,
+        'noisechisel_params': {},
+        'noisechisel_cmd': None,
     }
 
     def __init__(self, config_file=None, config={}, **kwargs):
@@ -324,6 +327,9 @@ class Gelsa:
         Returns:
             specframe.SpecFrame: The loaded and configured spectral frame instance.
         """
+        frame_args.setdefault('apply_noisechisel_background', self.config['use_noisechisel_background'])
+        frame_args.setdefault('noisechisel_params', self.config['noisechisel_params'])
+        frame_args.setdefault('noisechisel_cmd', self.config['noisechisel_cmd'])
         frame = specframe.SpecFrame(**frame_args)
 
         full_frame_path = os.path.join(self.config['workdir'], frame_path)

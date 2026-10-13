@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from . import continuum_subtraction as csb
-from . import photframe, spec_imager, utils
+from . import background, photframe, spec_imager, utils
 from .sgs import dmutils, frame_coordinates, psf_model, relative_flux
 from .spec_crop import NoExtraction, SpecCrop
 
@@ -37,6 +37,9 @@ class SpecFrame:
         'median_filter_mask_threshold': 80,
         'apply_persistence_correction': False,
         'persistence_mask_threshold': 30,
+        'apply_noisechisel_background': False,
+        'noisechisel_params': {},
+        'noisechisel_cmd': None,
         'use_cache': False,
     }
 
@@ -630,7 +633,9 @@ class SpecFrame:
         Get the pixel data arrays for a specific detector.
 
         Retrieves the science image, data quality (mask), and variance arrays.
-        Applies the zero-order mask if it has been set.
+        Applies the zero-order mask if it has been set. If the
+        'apply_noisechisel_background' parameter is set, the background
+        estimated by NoiseChisel (with masked pixels excluded) is subtracted.
 
         Args:
             detector_index (int): NISP detector index (0-15).
@@ -679,6 +684,17 @@ class SpecFrame:
                 fullmask[invalid] = 1
         except AttributeError:
             pass
+
+        if self.params['apply_noisechisel_background']:
+            out = background.noisechisel(
+                fullimage,
+                mask=fullmask != 0,
+                cmd=self.params['noisechisel_cmd'],
+                **self.params['noisechisel_params']
+            )
+            fullimage = fullimage - out['sky']
+            logger.info(f"Subtracted NoiseChisel background from detector {d}, "
+                        f"median sky {np.median(out['sky']):g}")
 
         if self._cs is not None:
             fullimage, fullmask = self._cs.process_frame(self, fullimage, fullmask)
