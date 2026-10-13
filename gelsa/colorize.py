@@ -212,8 +212,8 @@ def reproject_specframe(frame_list, wcs_out, fixed_wavelength=15500, width=2000,
                         subtract_continuum=False,
                         median_filter_size_pix=50):
     """ """
-    image_stack = np.zeros(wcs_out.array_shape, dtype='d')
-    norm_stack = np.zeros(wcs_out.array_shape, dtype='d')
+    image_stack = np.zeros(wcs_out.array_shape, dtype=np.float32)
+    norm_stack = np.zeros(wcs_out.array_shape, dtype=np.float32)
 
     x = np.random.uniform(0, 1, 10000)*wcs_out.array_shape[1]
     y = np.random.uniform(0, 1, 10000)*wcs_out.array_shape[0]
@@ -257,8 +257,6 @@ def reproject_specframe(frame_list, wcs_out, fixed_wavelength=15500, width=2000,
             except Exception:
                 continue
             valid = norm_image > 0
-            spec = image_out * 0
-            spec[valid] = image_out[valid]
 
             image_stack[valid] += image_out[valid]
             norm_stack[valid] += norm_image[valid]
