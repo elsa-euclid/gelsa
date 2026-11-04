@@ -378,7 +378,8 @@ class EuclidArchive:
         Returns image, segmap, wcs
         """
         results = self.query_mer_mosaic(tile, patch_id=patch_id, filter=filter, processing_mode=processing_mode, purpose=purpose)
-        results_seg = self.query_mer_segmap(tile, patch_id=patch_id)
+        results_seg = self.query_mer_segmap(tile, patch_id=patch_id,
+                                            processing_mode=processing_mode, purpose=purpose)
 
         image = None
         wcs = None
