@@ -126,9 +126,13 @@ def find_image(image_list, ra, dec, tile=None):
         wcs = image_pack['wcs']
         shape = wcs.array_shape
         x, y = wcs.all_world2pix(ra, dec, 0)
+        x = int(x)
+        y = int(y)
         if (x < 0) | (y < 0):
             continue
         if (x >= shape[1]) | (y >= shape[0]):
+            continue
+        if image_pack['segmap'][y, x] == -1:
             continue
         return image_pack
     return None
