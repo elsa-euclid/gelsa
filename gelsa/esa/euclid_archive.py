@@ -17,7 +17,7 @@ nothing and results survive a kernel restart. The query text is the cache key:
 keep it byte for byte if an existing cache entry is to be reused.
 
 The survey tables - the combined spectra and the MER catalogues - need a login.
-Their schema (``dr1`` or ``catalogue``) is found with a test query, see
+Their schema (``dr1_catalogue`` or ``catalogue``) is found with a test query, see
 :attr:`EuclidArchive.survey_schema`; the product tables are in ``dr1``.
 """
 import hashlib
@@ -191,7 +191,7 @@ class EuclidArchive:
     """
 
     # schemas tried in turn for the survey tables
-    schema_preference = ('dr1', 'catalogue')
+    schema_preference = ('dr1_catalogue', 'catalogue')
 
     # schema of the product tables
     product_schema = 'dr1'
