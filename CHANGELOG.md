@@ -1,5 +1,20 @@
 # Release notes
 
+## 4.2
+
+### Calibration
+- Default absolute flux calibration updated to `EUC_SIR_W-AbsoluteFlux-SCALE_ALL_20250725T060421.817237Z.fits`.
+- Updated the calibration directories searched on Datalabs.
+
+### Euclid archive
+- MER segmentation maps are queried with the same `processing_mode` and `purpose` as the mosaic.
+
+### Decontamination
+- Sources in the outer region of a MER tile are taken from the tile where they have a valid segmentation map.
+
+### Plotting
+- `reproject_specframe` uses less memory.
+
 ## 4.1
 
 ### Euclid archive
