@@ -25,7 +25,7 @@ class Gelsa:
         'datadir': '.',
         'calibdir': None,
         'config_file': None,
-        'abs_file': "EUC_SIR_W-AbsoluteFlux-SCALE_ALL_20250218T221007.269385Z.fits",
+        'abs_file': "EUC_SIR_W-AbsoluteFlux-SCALE_ALL_20250725T060421.817237Z.fits",
         'opt_file': 'SIR_Calib_Opt_EUCLID_2.0.1-CALIBRATION-pcasenov-PLAN-000000-MT0S7VWE-20250123-180643-0-new_opt_cal-0.xml',  # noqa: E501
         'ids_file': 'SIR_Calib_Ids_EUCLID_2.0.1-CALIBRATION-pcasenov-PLAN-000001-GQLJE83P-20250211-181132-0-new_ids_calib-0.xml',  # noqa: E501
         'crv_file': 'SIR_Calib_Crv_EUCLID_2.0.1-CALIBRATION-pcasenov-PLAN-000001-6NJP8VE4-20250211-163247-0-new_crv_cal-0.xml',  # noqa: E501
