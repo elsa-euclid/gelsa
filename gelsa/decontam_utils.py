@@ -126,8 +126,8 @@ def find_image(image_list, ra, dec, tile=None):
         wcs = image_pack['wcs']
         shape = wcs.array_shape
         x, y = wcs.all_world2pix(ra, dec, 0)
-        x = int(x)
-        y = int(y)
+        x = int(np.floor(x + 0.5))
+        y = int(np.floor(y + 0.5))
         if (x < 0) | (y < 0):
             continue
         if (x >= shape[1]) | (y >= shape[0]):
@@ -141,14 +141,20 @@ def find_image(image_list, ra, dec, tile=None):
 def crop_image(ra, dec, segmap_id, image=None, segmap=None, wcs=None, tile=None, width=101):
     """ """
     x, y = wcs.all_world2pix(ra, dec, 0)
-    if segmap_id is None:
-        segmap_id = segmap[int(y), int(x)]
-    w = width // 2
+    # nearest pixel (pixel i spans i-0.5 to i+0.5)
+    x = int(np.floor(x + 0.5))
+    y = int(np.floor(y + 0.5))
     ny, nx = image.shape
-    xmin = max(0, int(x-w))
-    xmax = min(nx, int(x+w))
-    ymin = max(0, int(y-w))
-    ymax = min(ny, int(y+w))
+    if segmap_id is None:
+        if not (0 <= x < nx and 0 <= y < ny):
+            raise ValueError(f"coordinates ra={float(ra)}, dec={float(dec)} are outside the image "
+                             f"({x=}, {y=}, shape={image.shape})")
+        segmap_id = segmap[y, x]
+    w = width // 2
+    xmin = max(0, x - w)
+    xmax = min(nx, x + w + 1)
+    ymin = max(0, y - w)
+    ymax = min(ny, y + w + 1)
     sel = np.s_[ymin:ymax, xmin:xmax]
     crop = image[sel].copy()
     crop_segmap = segmap[sel].copy()
@@ -227,7 +233,13 @@ def build_target_gal_list(target_list, image_list,
 
         if target_pack['segmap_id'] is None:
             x, y = crop_pack['wcs'].all_world2pix(target_pack['ra'], target_pack['dec'], 0)
-            target_pack['segmap_id'] = crop_pack['segmap'][int(y), int(x)]
+            x = int(np.floor(x + 0.5))
+            y = int(np.floor(y + 0.5))
+            ny, nx = crop_pack['segmap'].shape
+            if not (0 <= x < nx and 0 <= y < ny):
+                raise ValueError(f"target is outside its segmentation map "
+                                 f"({x=}, {y=}, shape={crop_pack['segmap'].shape}): {target_pack}")
+            target_pack['segmap_id'] = crop_pack['segmap'][y, x]
 
         gal = galaxy.Galaxy(
             object_id=target_pack['segmap_id'],

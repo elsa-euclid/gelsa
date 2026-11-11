@@ -296,8 +296,13 @@ class Galaxy:
         if self.params['object_id'] == 0:
             ra, dec = self.params['ra'], self.params['dec']
             x, y = self._wcs.all_world2pix(ra, dec, 0)
-            x = x.astype(int)
-            y = y.astype(int)
+            # nearest pixel (pixel i spans i-0.5 to i+0.5)
+            x = int(np.floor(x + 0.5))
+            y = int(np.floor(y + 0.5))
+            ny, nx = self._segmap.shape
+            if not (0 <= x < nx and 0 <= y < ny):
+                raise ValueError(f"coordinates {ra=}, {dec=} are outside the segmentation map "
+                                 f"({x=}, {y=}, shape={self._segmap.shape})")
             object_id = self._segmap[y, x]
         else:
             object_id = self.params['object_id']
