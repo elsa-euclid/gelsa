@@ -40,9 +40,10 @@ class SpectralImager:
 
     def init_image(self):
         """ """
-        shape = self.detector_shape
-        bin_y = np.arange(0, shape[1]+1, 1, dtype='d')
-        bin_x = np.arange(0, shape[0]+1, 1, dtype='d')
+        ny, nx = self.detector_shape
+        # bin edges: frame.radec_to_pixel puts pixel i at [i, i+1)
+        bin_y = np.arange(ny + 1, dtype='d')
+        bin_x = np.arange(nx + 1, dtype='d')
         self.pixel_grid = (bin_y, bin_x)
 
     def sample_spectrum(self, galaxy):

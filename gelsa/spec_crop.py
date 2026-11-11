@@ -477,9 +477,10 @@ class SpecCrop:
         x1 = min(self.shape[1]-1, x1)
         y1 = min(self.shape[0]-1, y1)
 
+        # output bin edges: pixel i spans i-0.5 to i+0.5 (WCS origin=0)
         pix_bins = (
-            np.arange(wcs.array_shape[0]+1),
-            np.arange(wcs.array_shape[1]+1),
+            np.arange(wcs.array_shape[0]+1) - 0.5,
+            np.arange(wcs.array_shape[1]+1) - 0.5,
         )
 
         image = self.image[y0:y1+1, x0:x1+1]
@@ -515,6 +516,8 @@ class SpecCrop:
         wl_pix = np.full(n_pix, wavelength)
 
         # Pre-generate all offsets at once: (ndrops, n_pix)
+        # drops centred on the pixel centre; detector pixel i spans [i, i+1)
+        # (frame.radec_to_pixel / pixel_to_radec convention)
         offs = rng.uniform(-0.5, 0.5, (2, ndrops, n_pix)) * pixel_shrink + 0.5
 
         # Batch all drops into one coordinate call: (ndrops * n_pix,)
@@ -646,6 +649,8 @@ class SpecCrop:
             inv_sens_bins = np.ones(n_wave_bins)
             area_weight_bins = np.ones(n_wave_bins)
 
+        # drops centred on the pixel centre; detector pixel i spans [i, i+1)
+        # (frame.radec_to_pixel / pixel_to_radec convention)
         offs_x = rng.uniform(-0.5, 0.5, (ndrops, len(xx))) * pixel_shrink + 0.5
         offs_y = rng.uniform(-0.5, 0.5, (ndrops, len(xx))) * pixel_shrink + 0.5
 

@@ -24,16 +24,26 @@ def _histogram2d(y, x, weight, bins_y, bins_x):
     hist = np.zeros((ny, nx), dtype=numba.float64)
 
     for i in range(n):
+        # half-open range [first edge, last edge)
+        if math.isnan(y[i]):
+            continue
         if y[i] < bins_y[0]:
             continue
-        if y[i] > bins_y[-1]:
+        if y[i] >= bins_y[-1]:
+            continue
+        if math.isnan(x[i]):
             continue
         if x[i] < bins_x[0]:
             continue
-        if x[i] > bins_x[-1]:
+        if x[i] >= bins_x[-1]:
             continue
         ind_y = int((y[i] - bins_y[0]) / step_y)
         ind_x = int((x[i] - bins_x[0]) / step_x)
+        # float rounding at the last edge
+        if ind_y >= ny:
+            continue
+        if ind_x >= nx:
+            continue
         hist[ind_y, ind_x] += weight[i]
 
     return hist
@@ -60,12 +70,26 @@ def _histogram2d_parallel(y, x, weight, bins_y, bins_x, n_threads):
         start = t * chunk
         end = min(start + chunk, n)
         for i in range(start, end):
-            if y[i] < bins_y[0] or y[i] > bins_y[-1]:
+            # half-open range [first edge, last edge)
+            if math.isnan(y[i]):
                 continue
-            if x[i] < bins_x[0] or x[i] > bins_x[-1]:
+            if y[i] < bins_y[0]:
+                continue
+            if y[i] >= bins_y[-1]:
+                continue
+            if math.isnan(x[i]):
+                continue
+            if x[i] < bins_x[0]:
+                continue
+            if x[i] >= bins_x[-1]:
                 continue
             ind_y = int((y[i] - bins_y[0]) / step_y)
             ind_x = int((x[i] - bins_x[0]) / step_x)
+            # float rounding at the last edge
+            if ind_y >= ny:
+                continue
+            if ind_x >= nx:
+                continue
             local_hists[t, ind_y, ind_x] += weight[i]
 
     hist = np.zeros((ny, nx), dtype=numba.float64)
@@ -93,11 +117,17 @@ def _histogram1d(x, weight, bins):
     hist = np.zeros(nx, dtype=numba.float64)
 
     for i in range(n):
+        # half-open range [first edge, last edge)
+        if math.isnan(x[i]):
+            continue
         if x[i] < bins[0]:
             continue
-        if x[i] > bins[-1]:
+        if x[i] >= bins[-1]:
             continue
         ind_x = int((x[i] - bins[0]) / step_x)
+        # float rounding at the last edge
+        if ind_x >= nx:
+            continue
         hist[ind_x] += weight[i]
 
     return hist
@@ -121,9 +151,17 @@ def _histogram1d_parallel(x, weight, bins, n_threads):
         start = t * chunk
         end = min(start + chunk, n)
         for i in range(start, end):
-            if x[i] < bins[0] or x[i] > bins[-1]:
+            # half-open range [first edge, last edge)
+            if math.isnan(x[i]):
+                continue
+            if x[i] < bins[0]:
+                continue
+            if x[i] >= bins[-1]:
                 continue
             ind_x = int((x[i] - bins[0]) / step_x)
+            # float rounding at the last edge
+            if ind_x >= nx:
+                continue
             local_hists[t, ind_x] += weight[i]
 
     hist = np.zeros(nx, dtype=numba.float64)

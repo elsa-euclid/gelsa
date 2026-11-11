@@ -11,6 +11,13 @@
 
 ### Decontamination
 - Sources in the outer region of a MER tile are taken from the tile where they have a valid segmentation map.
+- Segmentation map IDs are read at the pixel containing the source (previously could be the neighbouring pixel).
+- MER cutouts are `width` pixels (101 by default) centred on the source; previously one pixel smaller and off-centre.
+- A source outside its image or segmentation map raises `ValueError` instead of reading a wrapped-around pixel.
+
+### Resampling
+- `resample_on_radec` output images were shifted by half a pixel relative to the output WCS; fixed. This also affects `reproject_specframe`.
+- Fixed a possible out-of-bounds write in the histogram routines for values on the last bin edge or NaN.
 
 ### Plotting
 - `reproject_specframe` uses less memory.
