@@ -191,7 +191,7 @@ class EuclidArchive:
     """
 
     # schemas tried in turn for the survey tables
-    schema_preference = ('dr1_catalogue', 'catalogue')
+    schema_preference = ('dr1', 'catalogue')
 
     # schema of the product tables
     product_schema = 'dr1'
