@@ -1,5 +1,10 @@
 # Release notes
 
+## 4.3
+
+### Euclid archive
+- Uses the `dr1` schema for the survey tables (combined spectra and MER catalogues) in the public data release. The `catalogue` schema is used for `IDR`. In 4.2 the schema was `dr1_catalogue`, which does not exist and produced an error.
+
 ## 4.2
 
 ### Calibration
